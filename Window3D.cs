@@ -1,106 +1,125 @@
-﻿/* 
- * Nume: Rosca Stefan
- * Grupa: 3131A
- * Laboratorul 2
- */
-
+﻿//Nume: Rosca Stefan
+//Grupa: 3131a
+//Tema laborator 3
 
 using OpenTK;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Drawing;
-using System.Threading.Tasks;
-using OpenTK.Graphics.OpenGL;
 using OpenTK.Graphics;
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
+using System;
+using System.Drawing;
 
-namespace Rosca
+namespace ConsoleApp4
 {
     class Window3D : GameWindow
     {
-        private const int XYZ_SIZE = 75;
-        private Random rnd = new Random();
-        public Window3D() : base(800, 600, new GraphicsMode(32, 24, 0, 8))
+
+        private KeyboardState previousKeyboard;
+        private Randomizer rando;
+        private Triangle3D firstTriangle;
+
+
+        // CONST
+        private Color DEFAULT_BACK_COLOR = Color.LightSteelBlue;
+
+
+        public Window3D() : base(1280, 768, new GraphicsMode(32, 24, 0, 8))
         {
             VSync = VSyncMode.On;
-            Console.WriteLine("OpenGl versiunea: " + GL.GetString(StringName.Version));
-            Title = "OpenGl versiunea: " + GL.GetString(StringName.Version) + " (mod imediat)";
 
-            KeyDown += Keyboard_KeyDown;
-            
-        }
-
-        private void MouseEnter(object sender, EventArgs e)
-        {
-            
-        }
-
-        void Keyboard_KeyDown(object sender, KeyboardKeyEventArgs e)
-        {
-            if (e.Key == Key.Escape)
-                this.Exit();
-
-            if (e.Key == Key.F11)
-                if (this.WindowState == WindowState.Fullscreen)
-                    this.WindowState = WindowState.Normal;
-                else
-                    this.WindowState = WindowState.Fullscreen;
-
-            //2. Cand apas stanga, fundalul primeste o culoare random iar cand apas pe R
-            //revine la culoarea initiala
-
-            if(e.Key == Key.Left)
-            {
-                GL.ClearColor(Color.FromArgb(rnd.Next(256), rnd.Next(256), rnd.Next(256)));
-            }
-
-            if(e.Key == Key.R) 
-            {
-                GL.ClearColor(Color.Blue);
-            }
+            rando = new Randomizer();
+            firstTriangle = new Triangle3D(rando);
         }
 
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
 
-            GL.ClearColor(Color.Blue);
             GL.Enable(EnableCap.DepthTest);
             GL.DepthFunc(DepthFunction.Less);
+
             GL.Hint(HintTarget.PolygonSmoothHint, HintMode.Nicest);
+            DisplayHelp();
         }
 
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
 
-            GL.Viewport(0, 0, Width, Height);
+            // setare fundal
+            GL.ClearColor(DEFAULT_BACK_COLOR);
 
-            double aspect_ratio = Width / (double)Height;
+            // setare viewport
+            GL.Viewport(0, 0, this.Width, this.Height);
 
-            Matrix4 perspective = Matrix4.CreatePerspectiveFieldOfView(MathHelper.PiOver4, (float)aspect_ratio, 1, 64);
+            // setare proiectie/con vizualizare
+            Matrix4 perspectiva = Matrix4.CreatePerspectiveFieldOfView(MathHelper.PiOver4, (float)this.Width / (float)this.Height, 1, 250);
             GL.MatrixMode(MatrixMode.Projection);
-            GL.LoadMatrix(ref perspective);
+            GL.LoadMatrix(ref perspectiva);
 
-            Matrix4 lookat = Matrix4.LookAt(30, 30, 30, 0, 0, 0, 0, 1, 0);
+            // setare camera
+            Matrix4 cam = Matrix4.LookAt(30, 30, 30, 0, 0, 0, 0, 1, 0);
             GL.MatrixMode(MatrixMode.Modelview);
-            GL.LoadMatrix(ref lookat);
+            GL.LoadMatrix(ref cam);
         }
 
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
 
-            KeyboardState keyboard = Keyboard.GetState();
-            MouseState mouse = Mouse.GetState();
+            KeyboardState currentKeyboard = Keyboard.GetState();
+            
 
-            if (keyboard[Key.Escape])
+            if (currentKeyboard[Key.Escape])
             {
                 Exit();
             }
+
+            if (currentKeyboard[Key.H] && !previousKeyboard[Key.H])
+            {
+                DisplayHelp();
+            }
+
+            if (currentKeyboard[Key.R] && !previousKeyboard[Key.R])
+            {
+                GL.ClearColor(DEFAULT_BACK_COLOR);
+            }
+
+            if (currentKeyboard[Key.B] && !previousKeyboard[Key.B])
+            {
+                GL.ClearColor(rando.GenerateColor());
+            }
+
+            // triangle manipulation
+
+            if (currentKeyboard[Key.P] && !previousKeyboard[Key.P])
+            {
+                firstTriangle.TogglePolygonMode();
+            }
+
+
+            //Laborator 03
+
+            if (currentKeyboard[Key.X] && !previousKeyboard[Key.X])
+            {
+                firstTriangle.DiscoMode();
+            }
+
+            if (currentKeyboard[Key.O] && !previousKeyboard[Key.O])
+            {
+                firstTriangle.ToggleVisibility2();
+            }
+
+            MouseState mouse = Mouse.GetState();
+
+            if (mouse.IsButtonDown(MouseButton.Left))
+            {
+                Matrix4 lookat = Matrix4.LookAt(2, 3, 2, 0, 0, 0, 0, 1, 0);
+                GL.MatrixMode(MatrixMode.Modelview);
+                GL.LoadMatrix(ref lookat);
+            }
+
+            previousKeyboard = currentKeyboard;
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -108,38 +127,25 @@ namespace Rosca
             base.OnRenderFrame(e);
 
             GL.Clear(ClearBufferMask.ColorBufferBit);
-            GL.Clear(ClearBufferMask.DepthBufferBit) ;
-       ;
+            GL.Clear(ClearBufferMask.DepthBufferBit);
 
-            DrawAxes();
+            firstTriangle.DrawTriangle(); 
 
             SwapBuffers();
 
         }
 
-        private void DrawAxes()
+        private void DisplayHelp()
         {
-
-            GL.Begin(PrimitiveType.Lines);
-            GL.Color3(Color.Red);
-            GL.Vertex3(0, 0, 0);
-            GL.Vertex3(XYZ_SIZE, 0, 0);
-            GL.End();
-
-            
-            GL.Begin(PrimitiveType.Lines);
-            GL.Color3(Color.Yellow);
-            GL.Vertex3(0, 0, 0);
-            GL.Vertex3(0, XYZ_SIZE, 0); ;
-            GL.End();
-
-            
-            GL.Begin(PrimitiveType.Lines);
-            GL.Color3(Color.Green);
-            GL.Vertex3(0, 0, 0);
-            GL.Vertex3(0, 0, XYZ_SIZE);
-            GL.End();
+            Console.WriteLine("\n     MENU");
+            Console.WriteLine(" H - meniu ajutor");
+            Console.WriteLine(" ESC - parasire aplicatie");
+            Console.WriteLine(" R - resetare scena");
+            Console.WriteLine(" B - schimbare culoare de fundal");
+            Console.WriteLine(" P - modifica mod de desenare triunghiuri");
+            Console.WriteLine(" X - Schimba culoarea triunghiului");
+            Console.WriteLine(" O - afiseaza/ascunde triunghi");
+            Console.WriteLine(" Hold Left Click + mouse wheel movement - ar trebui sa schimbe unghiul camerei ");
         }
-
     }
 }

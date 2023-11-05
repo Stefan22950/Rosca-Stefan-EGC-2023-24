@@ -1,21 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK;
-
-namespace Rosca
+﻿namespace ConsoleApp4
 {
-    internal class Program
+    class Program
     {
-        [STAThread]
         static void Main(string[] args)
         {
-            using (Window3D example = new Window3D())
-            {
-                example.Run(30.0, 0.0);
-            }
+            Window3D wnd = new Window3D();
+            wnd.Run(30.0, 0.0);
+            
+            
+
         }
     }
 }
