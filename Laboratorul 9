@@ -1,0 +1,13 @@
+Laboratorul 10
+
+1.Utilizați pentru texturare imagini cu transparență și fără. Ce observați? 
+În locurile în care imaginea este transparentă se poate vedea prin obiect.
+
+2.Ce formate de imagine pot fi aplicate în procesul de texturare în OpenGL?
+Exemple de formate: bmp, jpg, gif, png.
+
+3.Specificați ce se întâmplă atunci când se modifică culoarea (prin manipularea canalelor RGB) obiectului texturat. 
+Dacă obiectului texturat i se aplică o culoare, alta decât cea albă, peste acesta se va aplica un filtru de culoarea respectivă. 
+
+4.Ce deosebiri există între scena ce utilizează obiecte texturate în modul iluminare activat, respectiv dezactivat?
+În modul de iluminare activat, textura aplicată obiectului se vede în totatlitate, iar în modul de iluminare dezactivat, textura se vede doar în locurile unde cade lumina.
